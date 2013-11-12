@@ -1,0 +1,83 @@
+﻿@model UsersGenderCountModel
+@using RtvSlo.Visualization.Models.Home
+@{
+    ViewBag.Title = "Number of user by gender";
+}
+
+<h1>@ViewBag.Title</h1>
+
+<div class="row-fluid">
+    @* Sidebar *@
+    <div class="span3">
+        <div class="well sidebar-nav">
+            @using (Html.BeginForm("UsersGenderCount", "Home", FormMethod.Post))
+            {
+                <p>
+                    @Html.LabelFor(x => x.DateFrom)
+                    @Html.TextBoxFor(x => x.DateFrom, new { @class = "date-picker" })
+                </p>
+                <p>
+                    @Html.LabelFor(x => x.DateTo)
+                    @Html.TextBoxFor(x => x.DateTo, new { @class = "date-picker" })
+                </p>
+                <p>
+                    <input type="submit" class="btn btn-primary" value="Filter" />
+                </p>
+            }
+        </div>
+    </div>
+
+    @* Main Content *@
+    <div class="span9">
+        <p>
+            @Html.DisplayNameFor(x => x.DateFrom):
+            @Html.DisplayFor(x => x.DateFrom),
+            @Html.DisplayNameFor(x => x.DateTo):
+            @Html.DisplayFor(x => x.DateTo)
+        </p>
+        
+        @*<div id="bar-chart"></div>*@
+
+        <div id="pie-chart"></div>
+    </div>
+</div>
+
+
+@section Scripts{
+    
+    <script type="text/javascript" src="~/Scripts/jqplot/plugins/jqplot.pieRenderer.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/jqplot/plugins/jqplot.donutRenderer.min.js"></script>
+
+    <script type="text/javascript" src="~/Scripts/jqplot/plugins/jqplot.barRenderer.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/jqplot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/jqplot/plugins/jqplot.pointLabels.min.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+//          var data = [
+//            ['Heavy Industry', 12],['Retail', 9], ['Light Industry', 14], 
+//            ['Out of home', 16],['Commuting', 7], ['Orientation', 9]];
+
+            var data = @Html.Raw(Model.JsonPie);
+
+          var plot1 = jQuery.jqplot ('pie-chart', [data], 
+            { 
+              seriesDefaults: {
+                // Make this a pie chart.
+                renderer: jQuery.jqplot.PieRenderer, 
+                rendererOptions: {
+                  // Put data labels on the pie slices.
+                  // By default, labels show the percentage of the slice.
+                  showDataLabels: true
+                }
+              }, 
+              legend: { show:true, location: 'e' }
+            }
+          );
+
+
+          
+
+        });
+    </script>
+}

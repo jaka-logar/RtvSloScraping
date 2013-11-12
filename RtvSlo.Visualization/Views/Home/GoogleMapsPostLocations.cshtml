@@ -1,0 +1,98 @@
+﻿@model GoogleMapsLocationsModel
+@using RtvSlo.Visualization.Models.Home
+@using RtvSlo.Core.HelperExtensions
+@using System.Globalization
+@{
+    ViewBag.Title = "Google Maps Post Locations";
+}
+
+<h1>@ViewBag.Title</h1>
+
+<div class="row-fluid">
+    @* Sidebar *@
+    <div class="span3">
+        <div class="well sidebar-nav">
+            @using (Html.BeginForm("GoogleMapsPostLocations", "Home", FormMethod.Post))
+            {
+                <p>
+                    @Html.LabelFor(x => x.DateFrom)
+                    @Html.TextBoxFor(x => x.DateFrom, new { @class = "date-picker" })
+                </p>
+                <p>
+                    @Html.LabelFor(x => x.DateTo)
+                    @Html.TextBoxFor(x => x.DateTo, new { @class = "date-picker" })
+                </p>
+                <p>
+                    <input type="submit" class="btn btn-primary" value="Filter" />
+                </p>
+            }
+        </div>
+    </div>
+
+    @* Main Content *@
+    <div class="span9">
+        @*<p>
+            @Html.DisplayNameFor(x => x.DateFrom):
+            @Html.DisplayFor(x => x.DateFrom),
+            @Html.DisplayNameFor(x => x.DateTo):
+            @Html.DisplayFor(x => x.DateTo)
+        </p>*@
+        
+        <div id="map-canvas"></div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+
+    <script>
+        
+        function addMarker(latitude, longitude, title, description, extraDescription)
+        {
+              var markerlatLng = new google.maps.LatLng(latitude, longitude);
+              var title = title;
+              var description = description;
+              var contentString = '<h3>' + title + '</h3>' + '<p>' + description + '</p><p>' + extraDescription + '</p>';
+
+              var infowindow = new google.maps.InfoWindow({
+                  content: contentString
+              });
+
+              var marker = new google.maps.Marker({
+                  position: markerlatLng,
+                  title: title,
+                  map: map,
+                  draggable: false
+              });
+
+              google.maps.event.addListener(marker, 'click', function () {
+                  infowindow.open(map, marker);
+              });
+        }
+
+        var map;
+        function initialize() {
+            var mapOptions = {
+                zoom: 9,
+                center: new google.maps.LatLng(46.122749, 14.798155), // litija
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+
+            map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+
+            @if (!Model.Locations.IsEmpty())
+            {
+                foreach (var location in Model.Locations)
+                {
+                    string extraDesc = "Število novic s to lokacijo: " + location.PostCount;
+                    @: addMarker(@location.Latitude.Value.ToString(CultureInfo.InvariantCulture.NumberFormat), @location.Longitude.Value.ToString(CultureInfo.InvariantCulture.NumberFormat), '@location.Name', '@location.Description', '@extraDesc');
+                }
+            }
+        }
+
+        google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+}

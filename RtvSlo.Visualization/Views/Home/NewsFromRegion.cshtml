@@ -1,0 +1,73 @@
+﻿@model NewsFromRegionModel
+@using RtvSlo.Visualization.Models.Home
+@using RtvSlo.Core.HelperExtensions
+@using RtvSlo.Core.Entities.RtvSlo
+@using System.Globalization
+@{
+    ViewBag.Title = "News From Region";
+}
+
+<h1>@ViewBag.Title</h1>
+
+<div class="row-fluid">
+    @* Sidebar *@
+    <div class="span3">
+        <div class="well sidebar-nav">
+            @using (Html.BeginForm("NewsFromRegion", "Home", FormMethod.Post))
+            {
+                <p>
+                    @Html.LabelFor(x => x.DateFrom)
+                    @Html.TextBoxFor(x => x.DateFrom, new { @class="date-picker" })
+                </p>
+                <p>
+                    @Html.LabelFor(x => x.DateTo)
+                    @Html.TextBoxFor(x => x.DateTo, new { @class="date-picker" })
+                </p>
+                <p>
+                    @Html.LabelFor(x => x.SelectedRegion)
+                    @Html.DropDownListFor(x => x.SelectedRegion, Model.AllRegions)
+                </p>
+                <p>
+                    <input type="submit" class="btn btn-primary" value="Filter" />
+                </p>
+            }
+        </div>
+    </div>
+
+    @* Main Content *@
+    <div class="span9">
+        <p>
+            @Html.DisplayNameFor(x => x.DateFrom):
+            @Html.DisplayFor(x => x.DateFrom),
+            @Html.DisplayNameFor(x => x.DateTo):
+            @Html.DisplayFor(x => x.DateTo)
+        </p>
+        
+        @if (!Model.Posts.IsEmpty())
+        {
+            <table class="posts">
+                <thead>
+                    <tr>
+                        <th>Post Guid</th>
+                        <th>Location</th>
+                        <th>See Also</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (Post p in Model.Posts)
+                    {
+                        <tr>
+                            <td>@p.RepositoryGuidUrl</td>
+                            <td>@p.Location</td>
+                            <td><a href="@p.Url">@p.Url</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <span>No data!</span>
+        }
+    </div>
+</div>
