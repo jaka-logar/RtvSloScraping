@@ -1,0 +1,5 @@
+# C#
+*.suo
+Thumbs.db
+[Bb]in
+[Dd]ebug*/
