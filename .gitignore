@@ -2,4 +2,5 @@
 *.suo
 Thumbs.db
 [Bb]in
+[Oo]bj
 [Dd]ebug*/
