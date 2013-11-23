@@ -54,7 +54,7 @@ namespace RtvSlo.Services.Repository
                     /// WHERE {
                     ///     ?s ?p sioc:Site
                     /// }    
-                    SparqlResultSet queryResult = connector.QueryFormat("SELECT * WHERE {{ ?s ?p <{0}> }}", Predicate.SiocSite); //TODO optimize query syntax
+                    SparqlResultSet queryResult = connector.QueryFormat("SELECT * WHERE {{ ?s ?p {0} }}", Predicate.SiocSite); //TODO optimize query syntax
                     if (queryResult == null)
                     {
                         return;
@@ -73,6 +73,14 @@ namespace RtvSlo.Services.Repository
                     using (Graph g = new Graph())
                     {
                         g.BaseUri = RepositoryHelper.BaseUrl.ToUri();
+                        
+                        /// Namespaces
+                        //foreach (Namespace value in RepositoryHelper.NamespaceDictionary.Values
+                        //    .Where(x => x.Status == NamespaceStatusEnum.Internal))
+                        //{
+                        //    Uri uri = UriFactory.Create(string.Format("{0}", value.FullPath));
+                        //    g.NamespaceMap.AddNamespace(value.Prefix, UriFactory.Create(value.FullPath));
+                        //}
 
                         /// Site
                         g.Assert(RepositoryHelper.SiteUrl.ToUriNode(g), Predicate.RdfType.ToUriNode(g), Predicate.SiocSite.ToUriNode(g));
@@ -193,7 +201,7 @@ namespace RtvSlo.Services.Repository
                     ///     MINUS { ?post dct:created ?date . }
                     /// }
                     /// LIMIT 1
-                    SparqlResultSet queryResult = connector.QueryFormat("SELECT ?url ?id WHERE {{ ?post <{4}> <{0}> . ?post <{1}> ?url . ?post <{3}> ?id MINUS {{ ?post <{2}> ?date . }} }} LIMIT 1", 
+                    SparqlResultSet queryResult = connector.QueryFormat("SELECT ?url ?id WHERE {{ ?post {4} {0} . ?post {1} ?url . ?post {3} ?id MINUS {{ ?post {2} ?date . }} }} LIMIT 1", 
                         Predicate.SiocPost, Predicate.RdfsSeeAlso, Predicate.DctCreated, Predicate.NewsId, Predicate.RdfType);
 
                     if (queryResult != null && !queryResult.Results.IsEmpty())
@@ -251,10 +259,10 @@ namespace RtvSlo.Services.Repository
                     /// LIMIT 1
                     string query = string.Format(
                         "SELECT ?url ?id ?date " +
-                        "WHERE {{ ?post <{4}> <{0}> . " +
-                        "?post <{1}> ?url . " +
-                        "?post <{3}> ?id . " +
-                        "?post <{5}> ?date " +
+                        "WHERE {{ ?post {4} {0} . " +
+                        "?post {1} ?url . " +
+                        "?post {3} ?id . " +
+                        "?post {5} ?date " +
                         "FILTER (?date <= \"{6}\") " +
                         "}} " +
                         "ORDER BY ?date " +
@@ -315,7 +323,7 @@ namespace RtvSlo.Services.Repository
                     ///     ; news:ID "id"
                     ///     ; ?predicate ?object
                     /// }
-                    SparqlResultSet queryResult = connector.QueryFormat("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" ; ?predicate ?object }}", 
+                    SparqlResultSet queryResult = connector.QueryFormat("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" ; ?predicate ?object }}", 
                                                             Predicate.RdfType, Predicate.SiocPost, Predicate.NewsId, post.Id.ToString(), Predicate.SiocTopic);
                     /// update existing
                     if (queryResult != null && !queryResult.Results.IsEmpty())
@@ -329,7 +337,9 @@ namespace RtvSlo.Services.Repository
                             post.RepositoryGuidUrl = ((UriNode)postGuid).Uri.AbsoluteUri;
 
                             /// select categories
-                            IEnumerable<SparqlResult> categories = queryResult.Results.Where(x => x.Value("predicate").ToSafeString() == Predicate.SiocTopic);
+                            IEnumerable<SparqlResult> categories = queryResult.Results
+                                .Where(x => x.Value("predicate").ToSafeString() == Predicate.SiocTopic.ToFullNamespaceUrl());
+
                             SparqlResult categoryResult = categories.FirstOrDefault(x => x.Value("object").ToSafeString() == categoryUrl);
                             if (categoryResult == null)
                             {
@@ -337,7 +347,9 @@ namespace RtvSlo.Services.Repository
                             }
 
                             /// select url
-                            IEnumerable<SparqlResult> postUrls = queryResult.Results.Where(x => x.Value("predicate").ToSafeString() == Predicate.RdfsSeeAlso);
+                            IEnumerable<SparqlResult> postUrls = queryResult.Results
+                                .Where(x => x.Value("predicate").ToSafeString() == Predicate.RdfsSeeAlso.ToFullNamespaceUrl());
+
                             SparqlResult postUrlResult = postUrls.FirstOrDefault(x => x.Value("object").ToSafeString() == post.Url);
                             if (postUrlResult == null)
                             {
@@ -409,7 +421,7 @@ namespace RtvSlo.Services.Repository
                     ///     ; news:ID "id"
                     ///     ; ?predicate ?object
                     /// }
-                    string query = string.Format("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" ; ?predicate ?object }}",
+                    string query = string.Format("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" ; ?predicate ?object }}",
                                                             Predicate.RdfType, Predicate.SiocPost, Predicate.NewsId, post.Id.ToString(), Predicate.SiocTopic);
                     SparqlResultSet queryResult = connector.QueryFormat(query);
 
@@ -512,7 +524,7 @@ namespace RtvSlo.Services.Repository
                         if (update)
                         {
                             statsGuidNode = queryResult.Results
-                                .First(x => x.Value("predicate").ToSafeString() == Predicate.NewsStatistics)
+                                .First(x => x.Value("predicate").ToSafeString() == Predicate.NewsStatistics.ToFullNamespaceUrl())
                                 .Value("object") as UriNode;
 
                             statsGuidUrl = statsGuidNode.Uri.AbsoluteUri;
@@ -522,7 +534,7 @@ namespace RtvSlo.Services.Repository
                             ///     <guid> rdf:type news:Stat
                             ///     ; ?predicate ?object
                             /// }
-                            query = string.Format("SELECT ?predicate ?object WHERE {{ <{0}> <{1}> <{2}> ; ?predicate ?object }}",
+                            query = string.Format("SELECT ?predicate ?object WHERE {{ <{0}> {1} {2} ; ?predicate ?object }}",
                                         statsGuidUrl, Predicate.RdfType, Predicate.NewsStat);
 
                             queryResult = connector.QueryFormat(query);
@@ -620,7 +632,7 @@ namespace RtvSlo.Services.Repository
                     ///     ?guidUrl rdf:type news:Comment
                     ///     ; news:ID "id"
                     /// } 
-                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" }}",
+                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" }}",
                                                                     Predicate.RdfType, Predicate.NewsComment, Predicate.NewsId, comment.Id.ToSafeString());
 
                     if (update)
@@ -631,7 +643,7 @@ namespace RtvSlo.Services.Repository
                         ///     ; news:ID "id"
                         ///     ; ?predicate ?object
                         /// }
-                        query = string.Format("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" ; ?predicate ?object }}",
+                        query = string.Format("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" ; ?predicate ?object }}",
                                                                     Predicate.RdfType, Predicate.NewsComment, Predicate.NewsId, comment.Id.ToSafeString());
                     }
 
@@ -758,7 +770,7 @@ namespace RtvSlo.Services.Repository
                     ///     ?guidUrl rdf:type sioc:UserAccount
                     ///     ; news:ID "id"
                     /// } 
-                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" }}",
+                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" }}",
                                                                     Predicate.RdfType, Predicate.SiocUserAccount, Predicate.NewsId, id);
 
                     if (update)
@@ -771,15 +783,15 @@ namespace RtvSlo.Services.Repository
                         ///     ?guidUrl rdf:type sioc:UserAccount
                         ///     ; news:ID "id"
                         ///     ; news:accessed ?date
-                        ///     FILTER ( ?date <= "2013-10-01")
+                        ///     FILTER ( ?date < "2013-10-01")
                         /// } 
                         query = string.Format(
                             "SELECT ?guidUrl " +
                             "WHERE {{ " +
-                            "?guidUrl <{0}> <{1}> " +
-                            "; <{2}> \"{3}\" " +
-                            "; <{4}> ?date " +
-                            "FILTER (?date > \"{5}\") " +
+                            "?guidUrl {0} {1} " +
+                            "; {2} \"{3}\" " +
+                            "; {4} ?date " +
+                            "FILTER (?date < \"{5}\") " +
                             "}}",
                             Predicate.RdfType, Predicate.SiocUserAccount, Predicate.NewsId, id,
                             Predicate.NewsAccessed, olderThanDays.ToString(RepositoryHelper.DateTimeFormat));
@@ -825,7 +837,7 @@ namespace RtvSlo.Services.Repository
                     ///     ?guidUrl rdf:type sioc:UserAccount
                     ///     ; news:nickname "name"
                     /// } 
-                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" }}",
+                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" }}",
                                                                     Predicate.RdfType, Predicate.SiocUserAccount, Predicate.NewsNickname, name);
                     SparqlResultSet queryResult = connector.QueryFormat(query);
 
@@ -868,7 +880,7 @@ namespace RtvSlo.Services.Repository
                     ///     ?guidUrl rdf:type sioc:UserAccount
                     ///     ; news:ID "id"
                     /// } 
-                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" }}",
+                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" }}",
                                                 Predicate.RdfType, Predicate.SiocUserAccount, Predicate.NewsId, user.Id);
 
                     if (update)
@@ -879,7 +891,7 @@ namespace RtvSlo.Services.Repository
                         ///     ; news:ID "id"
                         ///     ; ?predicate ?object
                         /// } 
-                        query = string.Format("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" ; ?predicate ?object }}",
+                        query = string.Format("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" ; ?predicate ?object }}",
                                                 Predicate.RdfType, Predicate.SiocUserAccount, Predicate.NewsId, user.Id);
                     }
 
@@ -1003,7 +1015,7 @@ namespace RtvSlo.Services.Repository
                         if (update)
                         {
                             statsGuidNode = queryResult.Results
-                                .First(x => x.Value("predicate").ToSafeString() == Predicate.MmcUserStatistics)
+                                .First(x => x.Value("predicate").ToSafeString() == Predicate.MmcUserStatistics.ToFullNamespaceUrl())
                                 .Value("object") as UriNode;
 
                             statsGuidUrl = statsGuidNode.Uri.AbsoluteUri;
@@ -1014,7 +1026,7 @@ namespace RtvSlo.Services.Repository
                             ///     ; ?predicate ?object
                             /// }
 
-                            query = string.Format("SELECT ?predicate ?object WHERE {{ <{0}> <{1}> <{2}> ; ?predicate ?object }}", 
+                            query = string.Format("SELECT ?predicate ?object WHERE {{ <{0}> {1} {2} ; ?predicate ?object }}", 
                                         statsGuidUrl, Predicate.RdfType, Predicate.MmcStatistics);
 
                             queryResult = connector.QueryFormat(query);
@@ -1124,7 +1136,7 @@ namespace RtvSlo.Services.Repository
                     ///     ?guidUrl rdf:type sioc:UserAccount
                     ///     ; news:nickname "name"
                     /// } 
-                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" }}",
+                    string query = string.Format("SELECT ?guidUrl WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" }}",
                                                                     Predicate.RdfType, Predicate.SiocUserAccount, Predicate.NewsNickname, user.Name);
                     
                     if (update)
@@ -1135,7 +1147,7 @@ namespace RtvSlo.Services.Repository
                         ///     ; news:nickname "name"
                         ///     ; ?predicate ?object
                         /// } 
-                        query = string.Format("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl <{0}> <{1}> ; <{2}> \"{3}\" ; ?predicate ?object }}",
+                        query = string.Format("SELECT ?guidUrl ?predicate ?object WHERE {{ ?guidUrl {0} {1} ; {2} \"{3}\" ; ?predicate ?object }}",
                                                                     Predicate.RdfType, Predicate.SiocUserAccount, Predicate.NewsNickname, user.Name);
                     }
 
@@ -1248,14 +1260,14 @@ namespace RtvSlo.Services.Repository
                     query.AppendFormat(
                         "SELECT ?category (COUNT(?post) as ?count) " +
                         "WHERE {{ " +
-                        "?post <rdf:type> <sioc:Post> . " +
-                        "?post <sioc:topic> ?categoryGuid . " +
-                        "?categoryGuid <rdfs:label> ?category . ");
+                        "?post rdf:type sioc:Post . " +
+                        "?post sioc:topic ?categoryGuid . " +
+                        "?categoryGuid rdfs:label ?category . ");
 
                     if (fromDate.HasValue && toDate.HasValue)
                     {
                         query.AppendFormat(
-                            "?post <{0}> ?date " +
+                            "?post {0} ?date " +
                             "FILTER(?date >= \"{1}\" && ?date <= \"{2}\") ",
                             Predicate.DctCreated,
                             fromDate.Value.ToString(RepositoryHelper.DateTimeFormat),
@@ -1339,13 +1351,13 @@ namespace RtvSlo.Services.Repository
                     query.AppendFormat(
                         "SELECT ?location (COUNT(?post) as ?count) " +
                         "WHERE {{ " +
-                        "?post <rdf:type> <sioc:Post> . " +
-                        "?post <news:location> ?location . ");
+                        "?post rdf:type sioc:Post . " +
+                        "?post news:location ?location . ");
 
                     if (fromDate.HasValue && toDate.HasValue)
                     {
                         query.AppendFormat(
-                            "?post <{0}> ?date " +
+                            "?post {0} ?date " +
                             "FILTER(?date >= \"{1}\" && ?date <= \"{2}\") ",
                             Predicate.DctCreated,
                             fromDate.Value.ToString(RepositoryHelper.DateTimeFormat),
@@ -1487,14 +1499,15 @@ namespace RtvSlo.Services.Repository
                     query.AppendFormat(
                         "SELECT ?gender (COUNT(?user) AS ?count) " +
                         "WHERE {{ " +
-                        "?user <rdf:type> <sioc:UserAccount> . " +
-                        "?user <sioc:has_function> <mmc:roles/readerAtRtvslo> . " +
-                        "?user <mmc:has_gender> ?gender . ");
+                        "?user rdf:type sioc:UserAccount . " +
+                        "?user sioc:has_function <{0}> . " +
+                        "?user mmc:has_gender ?gender . ",
+                        RepositoryHelper.ReaderRoleUrl.ToFullNamespaceUrl());
 
                     if (fromDate.HasValue && toDate.HasValue)
                     {
                         query.AppendFormat(
-                            "?user <{0}> ?date . " +
+                            "?user {0} ?date . " +
                             "FILTER(?date >= \"{1}\" && ?date <= \"{2}\") ",
                             Predicate.DctCreated,
                             fromDate.Value.ToString(RepositoryHelper.DateTimeFormat),
@@ -1544,14 +1557,14 @@ namespace RtvSlo.Services.Repository
                     query.AppendFormat(
                         "SELECT (COUNT(?user) AS ?count) " +
                         "WHERE {{ " +
-                        "?user <rdf:type> <sioc:UserAccount> . " +
-                        "?user <sioc:has_function> <mmc:roles/readerAtRtvslo> . " +
-                        "MINUS {{ ?user <mmc:has_gender> ?gender }} ");
+                        "?user rdf:type sioc:UserAccount . " +
+                        "?user sioc:has_function mmc:roles/readerAtRtvslo . " +
+                        "MINUS {{ ?user mmc:has_gender ?gender }} ");
 
                     if (fromDate.HasValue && toDate.HasValue)
                     {
                         query.AppendFormat(
-                            "?user <{0}> ?date . " +
+                            "?user {0} ?date . " +
                             "FILTER(?date >= \"{1}\" && ?date <= \"{2}\") ",
                             Predicate.DctCreated,
                             fromDate.Value.ToString(RepositoryHelper.DateTimeFormat),
@@ -1693,14 +1706,14 @@ namespace RtvSlo.Services.Repository
                     query.AppendFormat(
                         "SELECT DISTINCT ?post ?locationName ?seeAlso " +
                         "WHERE {{ " +
-                        "?post <rdf:type> <sioc:Post> . " +
-                        "?post <news:location> ?locationName . " +
-                        "?post <rdfs:seeAlso> ?seeAlso . ");
+                        "?post rdf:type sioc:Post . " +
+                        "?post news:location ?locationName . " +
+                        "?post rdfs:seeAlso ?seeAlso . ");
 
                     if (fromDate.HasValue && toDate.HasValue)
                     {
                         query.AppendFormat(
-                            "?post <{0}> ?date . ",
+                            "?post {0} ?date . ",
                             Predicate.DctCreated);
                     }
 
@@ -1802,9 +1815,9 @@ namespace RtvSlo.Services.Repository
                     /// SELECT ?url
                     /// WHERE {
                     ///     ?url rdf:type sioc:Category .
-                    ///     ?url rdfs:seeAlso "cat_url" .
+                    ///     ?url rdfs:seeAlso <cat_url> .
                     /// }
-                    string queryPattern = "SELECT ?url WHERE {{ ?url <{0}> <{1}> . ?url <{2}> <{3}> . }}";
+                    string queryPattern = "SELECT ?url WHERE {{ ?url {0} {1} . ?url {2} <{3}> . }}";
                     SparqlResultSet result = connector.QueryFormat(queryPattern, Predicate.RdfType, Predicate.SiocCategory, Predicate.RdfsSeeAlso, tempCategory.Url);
                     if (result == null)
                     {
@@ -1902,7 +1915,8 @@ namespace RtvSlo.Services.Repository
 
                 foreach (string pr in removePredicates)
                 {
-                    triples = queryResult.Results.Where(x => x.Value(predicate).ToSafeString() == pr);
+                    triples = queryResult.Results
+                        .Where(x => x.Value(predicate).ToSafeString() == pr.ToFullNamespaceUrl());
 
                     if (!triples.IsEmpty())
                     {
