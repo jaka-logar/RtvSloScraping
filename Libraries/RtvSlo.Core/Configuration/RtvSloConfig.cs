@@ -18,6 +18,7 @@ namespace RtvSlo.Core.Configuration
         public static string RtvSloName { get { return RtvSloConfig.Settings.RtvSloName; } }
         public static int RequestSleep { get { return RtvSloConfig.Settings.RequestSleep; } }
         public static int MainThreadSleep { get { return RtvSloConfig.Settings.MainThreadSleep; } }
+        public static bool UseFullNamespaceUrl { get { return RtvSloConfig.Settings.UseFullNamespaceUrl; } }
 
         public static int Step1InactiveTimeoutMinutes { get { return RtvSloConfig.Settings.Step1InactiveTimeoutMinutes; } }
         public static int Step2InactiveTimeoutMinutes { get { return RtvSloConfig.Settings.Step2InactiveTimeoutMinutes; } }
@@ -51,6 +52,7 @@ namespace RtvSlo.Core.Configuration
         public string RtvSloName { get; set; }
         public int RequestSleep { get; set; }
         public int MainThreadSleep { get; set; }
+        public bool UseFullNamespaceUrl { get; set; }
 
         public int Step1InactiveTimeoutMinutes { get; set; }
         public int Step2InactiveTimeoutMinutes { get; set; }
@@ -75,6 +77,7 @@ namespace RtvSlo.Core.Configuration
             config.CultureInfo = RtvSloConfigSection.GetStringConfigurationProperty(section, "CultureInfo");
             config.RepositoryDomainName = RtvSloConfigSection.GetStringConfigurationProperty(section, "Repository", attribute: "domainName");
             config.RtvSloName = RtvSloConfigSection.GetStringConfigurationProperty(section, "RtvSlo", attribute: "name");
+            config.UseFullNamespaceUrl = bool.Parse(RtvSloConfigSection.GetStringConfigurationProperty(section, "UseFullNamespaceUrl"));
 
             config.Step1InactiveTimeoutMinutes = int.Parse(RtvSloConfigSection.GetStringConfigurationProperty(section, "Step1Settings", attribute: "inactiveTimeoutMinutes"));
             config.Step2InactiveTimeoutMinutes = int.Parse(RtvSloConfigSection.GetStringConfigurationProperty(section, "Step2Settings", attribute: "inactiveTimeoutMinutes"));
