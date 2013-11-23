@@ -5,6 +5,7 @@ using System.Web;
 using Castle.Core.Logging;
 using HtmlAgilityPack;
 using RtvSlo.Core.Configuration;
+using RtvSlo.Core.Helpers;
 using RtvSlo.Core.Infrastructure.Windsor;
 using VDS.RDF;
 
@@ -92,8 +93,25 @@ namespace RtvSlo.Core.HelperExtensions
             }
         }
 
+        public static string ToFullNamespaceUrl(this string str)
+        {
+            if (RtvSloConfig.UseFullNamespaceUrl)
+            {
+                /// use complete url
+                string[] splitted = str.Split(new char[] { ':' }, 2);
+                if (!splitted.IsEmpty() && splitted.Length == 2 && RepositoryHelper.NamespaceDictionary.ContainsKey(splitted[0]))
+                {
+                    return string.Format("{0}{1}", RepositoryHelper.NamespaceDictionary[splitted[0]].FullPath, splitted[1]);
+                }
+            }
+
+            return str;
+        }
+
         public static IUriNode ToUriNode(this string str, IGraph g)
         {
+            str = str.ToFullNamespaceUrl();
+
             return g.CreateUriNode(str.ToUri());
         }
 
