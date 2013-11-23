@@ -82,6 +82,7 @@
     <Compile Include="Entities\RtvSlo\Post.cs" />
     <Compile Include="Entities\RtvSlo\User.cs" />
     <Compile Include="Configuration\RtvSloArchiveConfig.cs" />
+    <Compile Include="HelperEnums\NamespaceStatusEnum.cs" />
     <Compile Include="HelperEnums\UserFunctionEnum.cs" />
     <Compile Include="HelperEnums\UserGenderEnum.cs" />
     <Compile Include="HelperExtensions\DateTimeExtensions.cs" />
@@ -96,6 +97,7 @@
     <Compile Include="HelperExtensions\UriExtensions.cs" />
     <Compile Include="HelperModels\CategoryPostCount.cs" />
     <Compile Include="HelperModels\LocationInfo.cs" />
+    <Compile Include="HelperModels\Namespace.cs" />
     <Compile Include="HelperModels\UsersGenderCount.cs" />
     <Compile Include="Helpers\ParsingHelper.cs" />
     <Compile Include="Helpers\RepositoryHelper.cs" />

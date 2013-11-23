@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using RtvSlo.Core.Configuration;
+using RtvSlo.Core.HelperEnums;
 using RtvSlo.Core.HelperExtensions;
+using RtvSlo.Core.HelperModels;
 using RtvSlo.Core.RdfPredicate;
 using VDS.RDF;
 
@@ -10,25 +12,70 @@ namespace RtvSlo.Core.Helpers
 {
     public static class RepositoryHelper
     {
+        public static Dictionary<string, Namespace> NamespaceDictionary
+        {
+            get
+            {
+                Dictionary<string, Namespace> dict = new Dictionary<string, Namespace>();
+
+                /// internal
+                dict.Add("rdf",
+                    new Namespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#", NamespaceStatusEnum.Internal));
+                dict.Add("rdfs",
+                    new Namespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#", NamespaceStatusEnum.Internal));
+                dict.Add("owl",
+                    new Namespace("owl", "http://www.w3.org/2002/07/owl#", NamespaceStatusEnum.Internal));
+                dict.Add("xsd",
+                    new Namespace("xsd", "http://www.w3.org/2001/XMLSchema#", NamespaceStatusEnum.Internal));
+                dict.Add("dct",
+                    new Namespace("dct", "http://purl.org/dc/terms/", NamespaceStatusEnum.Internal));
+                dict.Add("sioc",
+                    new Namespace("sioc", "http://rdfs.org/sioc/ns#", NamespaceStatusEnum.Internal));
+                dict.Add("news",
+                    new Namespace("news", "http://opendata.lavbic.net/news/", NamespaceStatusEnum.Internal));
+                dict.Add("mmc",
+                    new Namespace("mmc", RepositoryHelper.BaseUrl, NamespaceStatusEnum.Internal));
+
+                /// external
+                dict.Add("geo",
+                    new Namespace("geo", "http://www.w3.org/2003/01/geo/wgs84_pos#", NamespaceStatusEnum.External));
+                dict.Add("foaf",
+                    new Namespace("foaf", "http://xmlns.com/foaf/0.1/", NamespaceStatusEnum.External));
+                dict.Add("dbpedia-owl",
+                    new Namespace("dbpedia-owl", "http://dbpedia.org/ontology/", NamespaceStatusEnum.External));
+                dict.Add("dbpprop",
+                    new Namespace("dbpprop", "http://dbpedia.org/property/", NamespaceStatusEnum.External));
+                dict.Add("dbpedia",
+                    new Namespace("dbpedia", "http://dbpedia.org/resource/", NamespaceStatusEnum.External));
+
+                return dict;
+            }
+        }
+
         public static string Prefixes
         {
             get
             {
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine("PREFIX   rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ");
-                sb.AppendLine("PREFIX	rdfs:	<http://www.w3.org/2000/01/rdf-schema#> ");
-                sb.AppendLine("PREFIX	owl:	<http://www.w3.org/2002/07/owl#> ");
-                sb.AppendLine("PREFIX	xsd:	<http://www.w3.org/2001/XMLSchema#> ");
-                sb.AppendLine("PREFIX	dct:	<http://purl.org/dc/terms/> ");
-                sb.AppendLine("PREFIX	sioc:	<http://rdfs.org/sioc/ns#> ");
-                sb.AppendLine("PREFIX	news:	<http://opendata.lavbic.net/news/> ");
-                sb.Append(string.Format("PREFIX 	mmc:	<{0}> ", RepositoryHelper.BaseUrl));
+                foreach (Namespace value in RepositoryHelper.NamespaceDictionary.Values)
+                {
+                    sb.AppendLine(string.Format("PREFIX {0}: <{1}> ", value.Prefix, value.FullPath));
+                }
 
-                sb.AppendLine("PREFIX   geo:    <http://www.w3.org/2003/01/geo/wgs84_pos#> ");
-                sb.AppendLine("PREFIX   foaf:   <http://xmlns.com/foaf/0.1/> ");
-                sb.AppendLine("PREFIX   dbpedia-owl:    <http://dbpedia.org/ontology/> ");
-                sb.AppendLine("PREFIX   dbpprop: <http://dbpedia.org/property/> ");
-                sb.AppendLine("PREFIX   dbpedia: <http://dbpedia.org/resource/> ");
+                //sb.AppendLine("PREFIX   rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ");
+                //sb.AppendLine("PREFIX	rdfs:	<http://www.w3.org/2000/01/rdf-schema#> ");
+                //sb.AppendLine("PREFIX	owl:	<http://www.w3.org/2002/07/owl#> ");
+                //sb.AppendLine("PREFIX	xsd:	<http://www.w3.org/2001/XMLSchema#> ");
+                //sb.AppendLine("PREFIX	dct:	<http://purl.org/dc/terms/> ");
+                //sb.AppendLine("PREFIX	sioc:	<http://rdfs.org/sioc/ns#> ");
+                //sb.AppendLine("PREFIX	news:	<http://opendata.lavbic.net/news/> ");
+                //sb.Append(string.Format("PREFIX 	mmc:	<{0}> ", RepositoryHelper.BaseUrl));
+
+                //sb.AppendLine("PREFIX   geo:    <http://www.w3.org/2003/01/geo/wgs84_pos#> ");
+                //sb.AppendLine("PREFIX   foaf:   <http://xmlns.com/foaf/0.1/> ");
+                //sb.AppendLine("PREFIX   dbpedia-owl:    <http://dbpedia.org/ontology/> ");
+                //sb.AppendLine("PREFIX   dbpprop: <http://dbpedia.org/property/> ");
+                //sb.AppendLine("PREFIX   dbpedia: <http://dbpedia.org/resource/> ");
 
                 sb.AppendLine(string.Empty);
 
