@@ -1558,8 +1558,9 @@ namespace RtvSlo.Services.Repository
                         "SELECT (COUNT(?user) AS ?count) " +
                         "WHERE {{ " +
                         "?user rdf:type sioc:UserAccount . " +
-                        "?user sioc:has_function mmc:roles/readerAtRtvslo . " +
-                        "MINUS {{ ?user mmc:has_gender ?gender }} ");
+                        "?user sioc:has_function <{0}> . " +
+                        "MINUS {{ ?user mmc:has_gender ?gender }} ",
+                        RepositoryHelper.ReaderRoleUrl.ToFullNamespaceUrl());
 
                     if (fromDate.HasValue && toDate.HasValue)
                     {
